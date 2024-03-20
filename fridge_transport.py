@@ -29,7 +29,7 @@ GAMMA_RAY_DIST = np.array([[0.75, 0.7], [2, 0.2], [4.5, 0.09], [8, 0.09], [
 
 # Graph Related Globals
 NUM_POINTS = 1000
-SAVE_DIR = "/Users/archiebrooks/Documents/Uni/Group-Project/new/genphys_poster/saves"
+SAVE_DIR = "pictures"
 FILENAME = "fridge_transport"
 
 # Attenuation Values
@@ -208,4 +208,3 @@ if __name__ == "__main__":
         lead_array.append(lead_results)
     
     graph(DISTANCE_ARRAY, air_array, steel_array, lead_array)
-
