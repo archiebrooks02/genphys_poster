@@ -28,13 +28,13 @@ GAMMA_RAY_DIST = np.array([[0.75, 0.7], [2, 0.2], [4.5, 0.09], [8, 0.09], [
                           12, 0.02]])  # [Bin Max MeV, Proportion]
 
 # Graph Related Globals
-NUM_POINTS = 100
+NUM_POINTS = 1000
 SAVE_DIR = "/Users/archiebrooks/Documents/Uni/Group-Project/new/genphys_poster/saves"
-FILENAME = "fig2"
+FILENAME = "fridge_transport"
 
 # Attenuation Values
-AREA_TOP = 0.7186  # m^2 (not yet used)
-AREA_SIDE = 1.469
+AREA_TOP = 0.7186  #m^2
+AREA_SIDE = 1.469 #m^2
 DISTANCE = 5 # km
 
 DISTANCE_ARRAY = np.linspace(1,15,500)
@@ -122,20 +122,6 @@ def photon_energy_dataset(photon_dist, total_points=1000):
 
 
 def attenuation_coeff_air(energy):
-    """
-
-
-    Parameters
-    ----------
-    energy : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    TYPE
-        DESCRIPTION.
-
-    """
     return (8.36988619e-05) * np.power(energy, -4.60402706e-01)
 
 
@@ -147,7 +133,6 @@ def attenuation_coeff_lead_2(energy):
 
 def attenuation_coeff_steel(energy):
     return 0.27869492 * np.power(energy, -0.81106709) + 0.17571693
-
 
 def attenuate(energies, photons, distance, material="air"):
     if material=="air":
