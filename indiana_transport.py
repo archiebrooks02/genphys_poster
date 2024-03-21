@@ -12,32 +12,38 @@ Bibliography:
     [1] - Wikipedia, "Nuclear Weapon Yield", https://en.wikipedia.org/wiki/Nuclear_weapon_yield
     [2] - Glasstone, S., and Dolan, P., J., "The Effects of Nuclear Weapons", 1977,  UNITED STATES
     DEPARTMENT OF DEFENSE and the ENERGY RESEARCH AND DEVELOPMENT ADMINISTRATION
+    [3] - https://iba.online/knowledge/en/raeume-planen/office-planning/body-dimensions/ (Could defo get a better reference)
 
 Created: Tue Mar 19 19:00:49 2024
 Last Updated: Tue Mar 19 __:__:__ 2024
 
 @author: Charlie Fynn Perkins, UID: 10839865 0
+
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
-import random
+import matplotlib.colors as mcolors
 
 # Physical Constants
 GAMMA_RAY_DIST = np.array([[0.75, 0.7], [2, 0.2], [4.5, 0.09], [8, 0.09], [
                           12, 0.02]])  # [Bin Max MeV, Proportion]
 
 # Graph Related Globals
-NUM_POINTS = 1000
+NUM_POINTS = 100
 SAVE_DIR = "/Users/archiebrooks/Documents/Uni/Group-Project/genphys_poster/pictures"
-FILENAME = "fridge_transport"
+FILENAME = "absorbed_photons"
+
+#approximating Harrison Ford to be a cuboid with measurements taken from [3]
+HARRISON_THICKNESS = 0.35 #m
+HARRISON_AREA = 0.925 #m^2
+HARRISON_WEIGHT = 85 #kg
 
 # Attenuation Values
 AREA_TOP = 0.7186  #m^2
 AREA_SIDE = 1.469 #m^2
-DISTANCE = 5 # km
 
-DISTANCE_ARRAY = np.linspace(1,15,500)
+DISTANCE_ARRAY = np.linspace(1,6,500)
 
 # Bomb Setup
 BOMB_YIELD = 10  # kt
@@ -165,22 +171,21 @@ def attenuate(energies, photons, distance, material="air"):
     return (energies, attenuated_photons)
 
 
-def graph(distances, air, steel, lead):
+def graph(distances, incident, absorbed):
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 6))
 
-    ax.set(title="Gamma ray transport through fridge walls at various distances from a " +
+    ax.set(title="Gamma ray transport through Indiana Jones at various distances from a " +
            str(BOMB_YIELD) + " kt Nuclear Blast")
     ax.set(xlabel="Distance from explosion (km)")
     ax.set(ylabel="Number of Photons")
 
-    ax.plot(distances, air, linestyle="solid",
+    ax.plot(distances, incident, linestyle="solid",
             color="indigo", label="Incident")
-    ax.plot(distances, steel, linestyle="solid",
-            color="darkgoldenrod", label="After steel layer")
-    ax.plot(distances, lead, linestyle="solid",
-            color="magenta", label="After lead layer")
+    ax.plot(distances, absorbed, linestyle="solid",
+            color="magenta", label="Absorbed")
     ax.set_yscale("log")
-    ax.set_ylim(10e-3)
+    ax.set_ylim(1e-3)
+    ax.set_xlim(2)
     ax.legend()
     ax.grid(alpha=0.5)
 
@@ -189,28 +194,115 @@ def graph(distances, air, steel, lead):
     fig.show()
     fig.clf()
 
+def graph2(distances, energy):
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 6))
+
+    ax.set(title="Gamma ray energy absorbtion by Indiana Jones at various distances from a " +
+           str(BOMB_YIELD) + " kt Nuclear Blast")
+    ax.set(xlabel="Distance from explosion (km)")
+    ax.set(ylabel="Total Energy Absorbed (J)")
+
+    ax.plot(distances, energy, linestyle="solid",
+            color="indigo", label="Energy Absorbed")
+    ax.set_yscale("log")
+    ax.legend()
+    ax.grid(alpha=0.5)
+
+    fig.tight_layout()
+    fig.savefig(SAVE_DIR + "//" + FILENAME + ".png", dpi=800)
+    fig.show()
+    fig.clf()
+
+def graph3(distances, dose):
+    x = np.linspace(1,15,500)
+    y = [np.full_like(x,80), np.full_like(x,50), np.full_like(x,6), np.full_like(x,4), np.full_like(x,3), np.full_like(x,2), 
+                        np.full_like(x,1), np.full_like(x,0.5), np.full_like(x,0.05)]
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 6))
+
+    ax.set_yscale("log")
+    ax.set(title="Radiation dose for Indiana Jones at various distances from a " +
+           str(BOMB_YIELD) + " kt Nuclear Blast")
+    ax.set(xlabel="Distance from explosion (km)")
+    ax.set(ylabel="Dose (Sv)") #weighting factor for gamma is 1 therefore Gy or Sv are equivalent
+
+    ax.plot(distances, dose, linestyle="solid",
+            color="indigo", label="Energy Absorbed")
+    colors = ['maroon', 'darkred', 'brown', 'firebrick', 'red', 'orangered', 'coral', 'darkorange', 'orange']
+    labels = ['Instant Death', 'Death within hours', f'100% Fatality Rate', f'60% Fatality Rate', f'50% Fatality Rate', 
+              f'35% Fatality Rate', f'10% Fatality Rate', "Mild Radiation Sickness", f'Risk of Cancer']
+    # Fill between the line and y-values with varying transparency based on distance
+    for i in reversed(range(len(y))):
+        ax.fill_between(distances, dose, y[i], where=(dose >= y[i]), color=colors[i], alpha=1,
+                        interpolate=True, label=labels[i])  # Adjust alpha value for transparency
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(reversed(handles), reversed(labels))
+    ax.grid(alpha=0.5)
+
+    fig.tight_layout()
+    fig.savefig(SAVE_DIR + "//" + FILENAME + ".png", dpi=800)
+    fig.show()
+    fig.clf()
+
+#this needs work
+def graph4(distances, dose): 
+    # Create a meshgrid for x and y values
+    X, Y = np.meshgrid(distances, distances)
+
+    # Create a meshgrid for dose values
+    Z = np.tile(dose, (len(distances), 1))
+
+    levels = [0.05, 0.5, 1, 2, 3, 4, 6, 50, 80]
+
+    # Plot the contour map with contours and a logarithmic colorbar
+    fig, ax = plt.subplots(figsize=(8, 8))
+    c = ax.contour(X, Y, Z, levels=levels, colors='k')
+    fig.colorbar(c, label='Dose (Sv)', norm=mcolors.LogNorm())
+
+    # Set axis labels and title
+    ax.set_xlabel('Distance from explosion (km)')
+    ax.set_ylabel('Distance from explosion (km)')
+    ax.set_title('Radiation Dose Contours')
+
+    fig.tight_layout()
+    fig.savefig(SAVE_DIR + "//" + FILENAME + ".png", dpi=800)
+    fig.show()
+    fig.clf()
+
+
 
 if __name__ == "__main__":
     energies, photons = photon_energy_dataset(
         photon_yield(BOMB_YIELD), NUM_POINTS)
-
-    photon_array = []
-    air_array = []
-    steel_array = []
-    lead_array = []
-    
+    incident_array = []
+    absorbed_array = []
+    energies_array = []
+    dose_array = []
+    print(np.sum(energies*photons))
     for d in DISTANCE_ARRAY:
-        air_energies, air_photons = attenuate(energies, photons, d)
-        air_results = np.sum(air_photons)*AREA_SIDE/(4*np.pi*d**2)
+        energies, air_photons = attenuate(energies, photons, d)
+        energies, steel_photons = attenuate(energies, air_photons, 10e-5, material="steel")
+        energies, lead_photons = attenuate(energies, steel_photons, 3.35e-5, material="lead")
 
-        steel_energies, steel_photons = attenuate(air_energies, air_photons, 10e-5, material="steel")
-        steel_results = np.sum(steel_photons)*AREA_SIDE/(4*np.pi*(d+10e-5)**2)
+        incident_photons = np.sum(lead_photons)*HARRISON_AREA/(4*np.pi*(d+13.35e-5)**2)
 
-        lead_energies, lead_photons = attenuate(steel_energies, steel_photons, 3.35e-5, material="lead")
-        lead_results = np.sum(lead_photons)*AREA_SIDE/(4*np.pi*(d+13.35e-5)**2)
+        energies, water_photons = attenuate(energies, lead_photons, 0.35e-3, material="water")
+        absorbed_photons = incident_photons-np.sum(water_photons)*HARRISON_AREA/(4*np.pi*(d+13.35e-5)**2)
 
-        air_array.append(air_results)
-        steel_array.append(steel_results)
-        lead_array.append(lead_results)
-    
-    graph(DISTANCE_ARRAY, air_array, steel_array, lead_array)
+        incident_array.append(incident_photons)
+        absorbed_array.append(absorbed_photons)
+        energies_array.append(np.sum(absorbed_photons*energies)*1.6e-13)
+        dose_array.append((np.sum(absorbed_photons*energies)*1.6e-13)/85)
+    graph(DISTANCE_ARRAY, incident_array, absorbed_array)
+
+    FILENAME="energy_distance"
+    graph2(DISTANCE_ARRAY, energies_array)
+
+    FILENAME="dose_distance"
+    graph3(DISTANCE_ARRAY, dose_array)
+
+    """
+    This doesnt work atm
+    FILENAME="dose_contourmap"
+    graph4(DISTANCE_ARRAY, dose_array)
+    """
