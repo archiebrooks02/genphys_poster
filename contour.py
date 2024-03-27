@@ -43,8 +43,8 @@ HARRISON_WEIGHT = 85 #kg
 AREA_TOP = 0.7186  #m^2
 AREA_SIDE = 1.469 #m^2
 
-DISTANCE_ARRAY = np.linspace(0,6.5,100)
-YIELD_ARRAY = np.linspace(0,100,100)
+DISTANCE_ARRAY = np.linspace(0,6.5,110)
+YIELD_ARRAY = np.linspace(0,74,110)
 
 # Bomb Setup
 BOMB_YIELD = 60  # kt
@@ -175,23 +175,25 @@ def attenuate(energies, photons, distance, material="air"):
 #this needs work
 def graph(dose_array): 
 
-    levels = [0.05, 0.5, 1, 2, 3, 4, 6, 50, 80]
-    colors = ['maroon', 'darkred', 'brown', 'firebrick', 'red', 'orangered', 'coral', 'darkorange', 'orange']
-    labels = ['Instant Death', 'Death within hours', f'100% Fatality Rate', f'60% Fatality Rate', f'50% Fatality Rate', 
-              f'35% Fatality Rate', f'10% Fatality Rate', "Mild Radiation Sickness", f'Risk of Cancer']
+    levels = [0.5, 1.5, 3.5, 8, 80]
+    colors = ['orange', 'orangered', 'red', 'firebrick', 'maroon']
+    labels = [f'Risk of Cancer', f'10% Fatality Rate', f'50% Fatality Rate', f'100% Fatality Rate', 'Instant Death']
 
     # Plot the contour map with contours and a logarithmic colorbar
     fig, ax = plt.subplots(figsize=(8, 8))
     contour = ax.contour(DISTANCE_ARRAY, YIELD_ARRAY, dose_array, levels=levels, colors=colors)
-    ax.clabel(contour, fmt='%1.1f')  # Add labels to contour lines
+    
+    ax.clabel(contour, fmt='%1.1f Sv', colors="k", inline=True, inline_spacing=20, fontsize=10)
+
 
     # Set axis labels and title
     ax.set_xlabel('Distance from explosion (km)')
     ax.set_ylabel('Yield of Explosion (kT)')
     ax.set_title('Contours of death')
 
-    contour.collections = [contour.collections[i] for i in range(len(levels))]  # Keep only specified contours for legend
-    fig.legend(contour.collections, labels, loc='upper right', labelcolor=colors)
+    handles = [plt.Line2D([0], [0], linestyle='-', color=color, linewidth=2) for color in colors]
+    ax.legend(handles, labels, loc='upper left')
+    ax.set_ylim(-0.5)
     fig.tight_layout()
     fig.savefig(SAVE_DIR + "//" + FILENAME + ".png", dpi=800)
     fig.show()
@@ -201,7 +203,7 @@ def graph(dose_array):
 
 if __name__ == "__main__":
 
-    dose_array = np.zeros((100,100))
+    dose_array = np.zeros((len(DISTANCE_ARRAY),len(YIELD_ARRAY)))
     for i in range(len(YIELD_ARRAY)):
         energies, photons = photon_energy_dataset(
         photon_yield(YIELD_ARRAY[i]), NUM_POINTS)
